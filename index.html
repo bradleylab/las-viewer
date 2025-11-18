@@ -53,8 +53,6 @@
       (geometry) => {
         geometry.computeBoundingBox();
         geometry.computeBoundingSphere();
-
-        // Center cloud at origin so survey coords don't matter
         geometry.center();
 
         const material = new THREE.PointsMaterial({
@@ -74,9 +72,7 @@
         controls.update();
       },
       undefined,
-      (error) => {
-        console.error("Error loading PLY:", error);
-      }
+      (error) => console.error("Error loading PLY:", error)
     );
 
     window.addEventListener("resize", () => {
