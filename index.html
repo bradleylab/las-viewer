@@ -21,8 +21,8 @@
 <body>
   <script type="module">
     import * as THREE from "https://cdn.skypack.dev/three@0.160.0";
-    import { OrbitControls } from "https://cdn.skypack.dev/three@0.160.0/examples/jsm/controls/OrbitControls.js";
-    import { PLYLoader } from "https://cdn.skypack.dev/three@0.160.0/examples/jsm/loaders/PLYLoader.js";
+    import { OrbitControls } from "https://cdn.skypack.dev/three@0.160.0/examples/jsm/controls/OrbitControls";
+    import { PLYLoader } from "https://cdn.skypack.dev/three@0.160.0/examples/jsm/loaders/PLYLoader";
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xcccccc);
@@ -56,7 +56,7 @@
         geometry.center();
 
         const material = new THREE.PointsMaterial({
-          size: 0.05,          // large enough to be clearly visible
+          size: 0.05,
           sizeAttenuation: true,
           vertexColors: true
         });
