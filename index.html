@@ -41,7 +41,6 @@
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
 
-    // Light (not strictly needed for Points, but harmless)
     const light = new THREE.DirectionalLight(0xffffff, 1.0);
     light.position.set(1, 1, 1);
     scene.add(light);
@@ -52,15 +51,14 @@
     loader.load(
       plyUrl,
       (geometry) => {
-        // Use vertex colors from the PLY
         geometry.computeBoundingBox();
         geometry.computeBoundingSphere();
 
-        // Center geometry at the origin so we can see it without knowing its survey coordinates
+        // Center cloud at origin so survey coords don't matter
         geometry.center();
 
         const material = new THREE.PointsMaterial({
-          size: 0.01,          // adjust if it looks too sparse/dense
+          size: 0.01,
           sizeAttenuation: true,
           vertexColors: true
         });
@@ -68,8 +66,7 @@
         const points = new THREE.Points(geometry, material);
         scene.add(points);
 
-        // Position camera based on bounding sphere radius
-        const radius = geometry.boundingSphere.radius || 10;
+        const radius = geometry.boundingSphere?.radius || 10;
         camera.position.set(0, 0, radius * 3.0);
         camera.near = radius / 100.0;
         camera.far = radius * 20.0;
