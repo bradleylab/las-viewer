@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Millbrook X9 splat</title>
+  <title>Millbrook X9 viewer</title>
   <style>
     html, body {
       margin: 0;
@@ -17,59 +17,84 @@
       height: 100%;
     }
   </style>
-
-  <!-- Map module imports for Three.js and Spark -->
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.178.0/three.module.js",
-        "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.10/spark.module.js"
-      }
-    }
-  </script>
 </head>
 <body>
   <script type="module">
-    import * as THREE from "three";
-    import { SplatMesh } from "@sparkjsdev/spark";
+    import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
+    import { OrbitControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js";
+    import { PLYLoader } from "https://unpkg.com/three@0.160.0/examples/jsm/loaders/PLYLoader.js";
 
-    // Basic THREE scene
     const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x202020);
 
     const camera = new THREE.PerspectiveCamera(
       60,
       window.innerWidth / window.innerHeight,
-      0.1,
-      1000
+      0.01,
+      10000
     );
-    // Put camera a bit back along +Z
-    camera.position.set(0, 0, 10);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: false });
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // Your PLY on S3
-    const splatURL = "https://bradleylab-public.s3.us-east-2.amazonaws.com/millbrook/x9_millbrook_dan.ply";
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
 
-    const cloud = new SplatMesh({ url: splatURL });
-    // Optionally nudge it a bit in front of the camera
-    cloud.position.set(0, 0, -5);
-    scene.add(cloud);
+    // Light (not strictly needed for Points, but harmless)
+    const light = new THREE.DirectionalLight(0xffffff, 1.0);
+    light.position.set(1, 1, 1);
+    scene.add(light);
 
-    // Handle window resize
+    const plyUrl = "https://bradleylab-public.s3.us-east-2.amazonaws.com/millbrook/x9_millbrook_dan.ply";
+
+    const loader = new PLYLoader();
+    loader.load(
+      plyUrl,
+      (geometry) => {
+        // Use vertex colors from the PLY
+        geometry.computeBoundingBox();
+        geometry.computeBoundingSphere();
+
+        // Center geometry at the origin so we can see it without knowing its survey coordinates
+        geometry.center();
+
+        const material = new THREE.PointsMaterial({
+          size: 0.01,          // adjust if it looks too sparse/dense
+          sizeAttenuation: true,
+          vertexColors: true
+        });
+
+        const points = new THREE.Points(geometry, material);
+        scene.add(points);
+
+        // Position camera based on bounding sphere radius
+        const radius = geometry.boundingSphere.radius || 10;
+        camera.position.set(0, 0, radius * 3.0);
+        camera.near = radius / 100.0;
+        camera.far = radius * 20.0;
+        camera.updateProjectionMatrix();
+        controls.update();
+      },
+      undefined,
+      (error) => {
+        console.error("Error loading PLY:", error);
+      }
+    );
+
     window.addEventListener("resize", () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // Simple render loop
-    renderer.setAnimationLoop(() => {
-      // Tiny rotation so you can see movement even without controls
-      cloud.rotation.y += 0.002;
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
       renderer.render(scene, camera);
-    });
+    }
+
+    animate();
   </script>
 </body>
 </html>
