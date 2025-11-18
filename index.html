@@ -12,32 +12,64 @@
       overflow: hidden;
     }
     canvas {
+      display: block;
       width: 100%;
       height: 100%;
-      display: block;
     }
   </style>
+
+  <!-- Map module imports for Three.js and Spark -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.178.0/three.module.js",
+        "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.10/spark.module.js"
+      }
+    }
+  </script>
 </head>
 <body>
-  <canvas id="spark-canvas"></canvas>
-
   <script type="module">
-    import {
-      SparkRenderer,
-      SparkViewpoint,
-      SplatMesh
-    } from "https://cdn.jsdelivr.net/npm/@spark-js/core/+esm";
+    import * as THREE from "three";
+    import { SplatMesh } from "@sparkjsdev/spark";
 
-    const canvas = document.getElementById("spark-canvas");
-    const renderer = new SparkRenderer(canvas);
-    const viewpoint = new SparkViewpoint(renderer);
+    // Basic THREE scene
+    const scene = new THREE.Scene();
 
-    const mesh = new SplatMesh({
-      url: "https://bradleylab-public.s3.us-east-2.amazonaws.com/millbrook/x9_millbrook_dan.ply"
+    const camera = new THREE.PerspectiveCamera(
+      60,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    // Put camera a bit back along +Z
+    camera.position.set(0, 0, 10);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Your PLY on S3
+    const splatURL = "https://bradleylab-public.s3.us-east-2.amazonaws.com/millbrook/x9_millbrook_dan.ply";
+
+    const cloud = new SplatMesh({ url: splatURL });
+    // Optionally nudge it a bit in front of the camera
+    cloud.position.set(0, 0, -5);
+    scene.add(cloud);
+
+    // Handle window resize
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    renderer.scene.add(mesh);
-    renderer.start();
+    // Simple render loop
+    renderer.setAnimationLoop(() => {
+      // Tiny rotation so you can see movement even without controls
+      cloud.rotation.y += 0.002;
+      renderer.render(scene, camera);
+    });
   </script>
 </body>
 </html>
