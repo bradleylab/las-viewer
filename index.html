@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Millbrook X9 Splat</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #canvas { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script src="https://cdn.jsdelivr.net/npm/@antimatter15/splat/splat.js"></script>
+  <script>
+    const viewer = new SPLAT.Viewer({
+      canvas: document.getElementById('canvas'),
+      url: 'https://bradleylab-public.s3.us-east-2.amazonaws.com/millbrook/x9_millbrook.splat'
+    });
+  </script>
+</body>
+</html>
