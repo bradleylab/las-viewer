@@ -1,7 +1,8 @@
-<!DOCTYPE html>   
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Millbrook X9 Gaussian Splat</title>
   <style>
     html, body {
@@ -23,7 +24,7 @@
       left: 50%;
       transform: translate(-50%, -50%);
       color: #333;
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       font-size: 20px;
       background: rgba(255,255,255,0.8);
       padding: 20px;
@@ -35,8 +36,10 @@
   <div id="loading">Loading gaussian splat...</div>
   
   <script type="module">
-    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
-    import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js";
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+    console.log('Script started');
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xcccccc);
@@ -55,59 +58,59 @@
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
 
-    const splatUrl = "https://bradleylab-public.s3.us-east-2.amazonaws.com/millbrook/x9_millbrook.splat";
+    const splatUrl = 'https://bradleylab-public.s3.us-east-2.amazonaws.com/millbrook/x9_millbrook.splat';
 
-console.log("About to load splat from:", splatUrl);
+    console.log('About to load splat from:', splatUrl);
 
-async function loadSplat(url) {
-  console.log("loadSplat function called");
-  const response = await fetch(url);
-  console.log("Fetch completed, response:", response);
-  const buffer = await response.arrayBuffer();
-  console.log("Buffer loaded, size:", buffer.byteLength);
-  const view = new DataView(buffer);
-      
-      // Each splat is 44 bytes:
-      // 12 bytes: position (3 floats)
-      // 12 bytes: scale (3 floats)
-      // 4 bytes: color rgba (4 bytes)
-      // 16 bytes: rotation quaternion (4 floats) - we'll skip for simple rendering
-      
-      const rowLength = 44;
-      const numSplats = buffer.byteLength / rowLength;
-      
-      console.log(`Loading ${numSplats.toLocaleString()} splats`);
-      
-      const positions = new Float32Array(numSplats * 3);
-      const colors = new Uint8Array(numSplats * 3);
-      const sizes = new Float32Array(numSplats);
-      
-      for (let i = 0; i < numSplats; i++) {
-        const offset = i * rowLength;
+    async function loadSplat(url) {
+      console.log('loadSplat function called');
+      try {
+        const response = await fetch(url);
+        console.log('Fetch completed, response status:', response.status);
         
-        // Position
-        positions[i * 3] = view.getFloat32(offset, true);
-        positions[i * 3 + 1] = view.getFloat32(offset + 4, true);
-        positions[i * 3 + 2] = view.getFloat32(offset + 8, true);
+        const buffer = await response.arrayBuffer();
+        console.log('Buffer loaded, size:', buffer.byteLength);
         
-        // Scale (use first component as point size)
-        sizes[i] = view.getFloat32(offset + 12, true);
+        const view = new DataView(buffer);
         
-        // Color
-        colors[i * 3] = view.getUint8(offset + 24);
-        colors[i * 3 + 1] = view.getUint8(offset + 25);
-        colors[i * 3 + 2] = view.getUint8(offset + 26);
+        const rowLength = 44;
+        const numSplats = buffer.byteLength / rowLength;
         
-        if ((i + 1) % 100000 === 0) {
-          document.getElementById('loading').textContent = 
-            `Loading: ${((i + 1) / numSplats * 100).toFixed(0)}%`;
+        console.log('Loading', numSplats.toLocaleString(), 'splats');
+        
+        const positions = new Float32Array(numSplats * 3);
+        const colors = new Uint8Array(numSplats * 3);
+        const sizes = new Float32Array(numSplats);
+        
+        for (let i = 0; i < numSplats; i++) {
+          const offset = i * rowLength;
+          
+          positions[i * 3] = view.getFloat32(offset, true);
+          positions[i * 3 + 1] = view.getFloat32(offset + 4, true);
+          positions[i * 3 + 2] = view.getFloat32(offset + 8, true);
+          
+          sizes[i] = view.getFloat32(offset + 12, true);
+          
+          colors[i * 3] = view.getUint8(offset + 24);
+          colors[i * 3 + 1] = view.getUint8(offset + 25);
+          colors[i * 3 + 2] = view.getUint8(offset + 26);
+          
+          if ((i + 1) % 100000 === 0) {
+            const percent = ((i + 1) / numSplats * 100).toFixed(0);
+            document.getElementById('loading').textContent = 'Loading: ' + percent + '%';
+            console.log('Progress:', percent + '%');
+          }
         }
+        
+        return { positions, colors, sizes, numSplats };
+      } catch (error) {
+        console.error('Error in loadSplat:', error);
+        throw error;
       }
-      
-      return { positions, colors, sizes, numSplats };
     }
 
     loadSplat(splatUrl).then(({ positions, colors, sizes, numSplats }) => {
+      console.log('Creating geometry...');
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3, true));
@@ -117,7 +120,7 @@ async function loadSplat(url) {
       geometry.center();
 
       const material = new THREE.PointsMaterial({
-        size: 0.15,  // Can adjust this
+        size: 0.15,
         sizeAttenuation: true,
         vertexColors: true,
         transparent: true,
@@ -134,13 +137,13 @@ async function loadSplat(url) {
       camera.updateProjectionMatrix();
       
       document.getElementById('loading').style.display = 'none';
-      console.log(`Loaded ${numSplats.toLocaleString()} splats`);
+      console.log('Loaded', numSplats.toLocaleString(), 'splats successfully');
     }).catch(error => {
-      console.error("Error loading splat:", error);
-      document.getElementById('loading').textContent = "Error loading splat";
+      console.error('Error loading splat:', error);
+      document.getElementById('loading').textContent = 'Error loading splat: ' + error.message;
     });
 
-    window.addEventListener("resize", () => {
+    window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
