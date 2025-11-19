@@ -4,18 +4,40 @@
   <meta charset="utf-8">
   <title>Millbrook X9 Splat</title>
   <style>
-    body { margin: 0; overflow: hidden; }
-    #canvas { width: 100vw; height: 100vh; }
+    body { 
+      margin: 0; 
+      padding: 0;
+      overflow: hidden;
+    }
+    #container { 
+      width: 100vw; 
+      height: 100vh; 
+    }
   </style>
 </head>
 <body>
-  <canvas id="canvas"></canvas>
-  <script src="https://cdn.jsdelivr.net/npm/@antimatter15/splat/splat.js"></script>
+  <div id="container"></div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mkkellogg/gaussian-splats-3d@0.5.0/build/gaussian-splats-3d.umd.min.js"></script>
   <script>
-    const viewer = new SPLAT.Viewer({
-      canvas: document.getElementById('canvas'),
-      url: 'https://bradleylab-public.s3.us-east-2.amazonaws.com/millbrook/x9_millbrook.splat'
+    console.log('Libraries loaded');
+    
+    const viewer = new GaussianSplats3D.Viewer({
+      rootElement: document.getElementById('container'),
+      cameraUp: [0, 1, 0],
+      initialCameraPosition: [0, 0, 10]
     });
+    
+    console.log('Viewer created, loading splat...');
+    
+    viewer.addSplatScene('https://bradleylab-public.s3.us-east-2.amazonaws.com/millbrook/x9_millbrook.splat')
+      .then(() => {
+        console.log('Splat loaded successfully!');
+      })
+      .catch(err => {
+        console.error('Error loading splat:', err);
+      });
   </script>
 </body>
 </html>
