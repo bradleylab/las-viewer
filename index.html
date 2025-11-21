@@ -71,6 +71,16 @@
 
     console.log('About to load splat from:', splatUrl);
 
+    const splatUrl = 'https://bradleylab-public.s3.us-east-2.amazonaws.com/millbrook/x9_millbrook_dan.splat';
+
+console.log('About to load splat from:', splatUrl);
+
+// Add this test fetch to see what happens:
+fetch(splatUrl)
+  .then(r => console.log('Fetch response:', r.status, r.headers.get('content-length')))
+  .catch(e => console.error('Fetch failed:', e));
+
+
     async function loadSplat(url) {
       console.log('loadSplat function called');
       try {
